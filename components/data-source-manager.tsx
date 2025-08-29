@@ -203,15 +203,23 @@ export function DataSourceManager() {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6">
-            <Button
-              variant="destructive"
-              onClick={clearPokemon}
-              className="w-full h-12 text-base font-medium"
-              disabled={isLoading}
-            >
-              <Trash2 className="mr-2 h-5 w-5" />
-              Clear All Pokemon Data ({pokemon.length.toLocaleString()} records)
-            </Button>
+          <Button
+  variant="destructive"
+  onClick={clearPokemon}
+  className="w-full h-auto min-h-12 font-medium flex items-center justify-center gap-1 px-2 py-2"
+  disabled={isLoading}
+>
+  <Trash2 className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+  <span className="text-center">
+    <span className="sm:hidden">
+      Clear All ({pokemon.length.toLocaleString()})
+    </span>
+    <span className="hidden sm:inline">
+      Clear All Pokemon Data ({pokemon.length.toLocaleString()} records)
+    </span>
+  </span>
+</Button>
+
           </CardContent>
         </Card>
       )}

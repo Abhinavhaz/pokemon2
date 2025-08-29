@@ -324,12 +324,28 @@ export function PokemonDataTable() {
     return [...baseColumns, ...dynamicColumns, addColumnColumn]
   }, [customColumns, updatePokemon])
 
+  // Guard against stale sorting/filter state when columns change (e.g., custom columns removed)
+  const validColumnIdSet = useMemo(() => {
+    const ids = new Set<string>()
+    columns.forEach((col) => {
+      const id = (col as any).id ?? (col as any).accessorKey
+      if (typeof id === "string" && id.length > 0) ids.add(id)
+    })
+    return ids
+  }, [columns])
+
+  const safeSorting = useMemo(() => sorting.filter((s) => validColumnIdSet.has(s.id)), [sorting, validColumnIdSet])
+  const safeColumnFilters = useMemo(
+    () => columnFilters.filter((f) => validColumnIdSet.has(f.id as string)),
+    [columnFilters, validColumnIdSet],
+  )
+
   const table = useReactTable({
     data: pokemon,
     columns,
     state: {
-      sorting,
-      columnFilters,
+      sorting: safeSorting,
+      columnFilters: safeColumnFilters,
       globalFilter,
     },
     onSortingChange: setSorting,
@@ -363,8 +379,8 @@ export function PokemonDataTable() {
   return (
     <div className="space-y-4 relative">
       {/* Search and Controls */}
-      <div className="flex items-center gap-4 px-6 py-4">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4">
+        <div className="relative w-full sm:flex-1 sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search Pokemon..."
@@ -373,38 +389,40 @@ export function PokemonDataTable() {
             className="pl-10"
           />
         </div>
-        <div className="text-sm text-muted-foreground">
+        <div className="text-xs sm:text-sm text-muted-foreground">
           Showing {rows.length.toLocaleString()} of {pokemon.length.toLocaleString()} Pokemon
         </div>
-        <ExportDialog filteredPokemon={filteredPokemon} />
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="sm">
-              <Settings className="h-4 w-4 mr-2" />
-              Manage Columns
-            </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>Column Management</SheetTitle>
-              <SheetDescription>Add, remove, and manage custom columns for your Pokemon dataset.</SheetDescription>
-            </SheetHeader>
-            <div className="mt-6">
-              <ColumnManager />
-            </div>
-          </SheetContent>
-        </Sheet>
+        <div className="flex gap-2">
+          <ExportDialog filteredPokemon={filteredPokemon} />
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Settings className="h-4 w-4 mr-2" />
+                Manage Columns
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Column Management</SheetTitle>
+                <SheetDescription>Add, remove, and manage custom columns for your Pokemon dataset.</SheetDescription>
+              </SheetHeader>
+              <div className="mt-6">
+                <ColumnManager />
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
 
       {/* Virtualized Table */}
       <div
         ref={parentRef}
-        className="h-[600px] overflow-auto border rounded-lg"
+        className="h-[60vh] sm:h-[600px] overflow-auto border rounded-lg"
         style={{
           contain: "strict",
         }}
       >
-        <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: "100%", position: "relative" }}>
+        <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, minWidth: "720px", width: "100%", position: "relative" }}>
           {/* Table Header */}
           <div className="sticky top-0 z-10 bg-background border-b">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -462,8 +480,8 @@ export function PokemonDataTable() {
       </div>
 
       {/* Table Info */}
-      <div className="px-6 py-2 text-sm text-muted-foreground border-t">
-        <div className="flex justify-between items-center">
+      <div className="px-4 sm:px-6 py-2 text-xs sm:text-sm text-muted-foreground border-t">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
           <span>
             {pokemon.length.toLocaleString()} total Pokemon • {customColumns.length} custom columns
           </span>

@@ -133,7 +133,7 @@ export function AIChatOverlay({ isOpen, onToggle }: AIChatOverlayProps) {
     return (
       <Button
         onClick={onToggle}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50 bg-primary hover:bg-primary/90 transition-all duration-200 hover:scale-105"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 h-12 w-12 sm:h-14 sm:w-14 rounded-full shadow-lg z-50 bg-primary hover:bg-primary/90 transition-all duration-200 hover:scale-105"
         size="icon"
       >
         <MessageSquare className="h-6 w-6" />
@@ -143,9 +143,9 @@ export function AIChatOverlay({ isOpen, onToggle }: AIChatOverlayProps) {
 
   return (
     <Card
-      className={`fixed bottom-6 right-6 w-96 shadow-2xl z-50 transition-all duration-300 border-2 ${
-        isMinimized ? "h-16" : "h-[520px]"
-      }`}
+      className={`fixed z-50 shadow-2xl transition-all duration-300 border-2 ${
+        isMinimized ? "h-14 sm:h-16" : "h-[65vh] sm:h-[520px]"
+      } w-[calc(100%-1.5rem)] sm:w-96 left-3 right-3 sm:left-auto sm:right-6 bottom-3 sm:bottom-6`}
     >
       <CardHeader className="pb-3 bg-gradient-to-r from-primary/5 to-accent/5 rounded-t-lg">
         <CardTitle className="flex items-center justify-between text-sm">
@@ -180,9 +180,9 @@ export function AIChatOverlay({ isOpen, onToggle }: AIChatOverlayProps) {
       </CardHeader>
 
       {!isMinimized && (
-        <CardContent className="flex flex-col h-[440px] p-4 pt-0">
+        <CardContent className="flex flex-col p-4 pt-0 h-[calc(65vh-80px)] sm:h-[440px] min-h-0">
           {/* Messages */}
-          <ScrollArea className="flex-1 pr-4 mt-4" ref={scrollAreaRef}>
+          <ScrollArea className="flex-1 pr-4 mt-4 min-h-0" ref={scrollAreaRef}>
             <div className="space-y-4">
               {messages.map((message) => (
                 <div key={message.id} className="space-y-2">
