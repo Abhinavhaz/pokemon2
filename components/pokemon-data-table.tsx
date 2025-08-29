@@ -1,0 +1,478 @@
+"use client"
+
+import { useMemo, useState } from "react"
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  flexRender,
+  type ColumnDef,
+  type SortingState,
+  type ColumnFiltersState,
+} from "@tanstack/react-table"
+import { useVirtualizer } from "@tanstack/react-virtual"
+import { useRef } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { ArrowUpDown, ArrowUp, ArrowDown, Search, Settings } from "lucide-react"
+import { usePokemonStore } from "@/lib/store"
+import { EditableCell } from "./editable-cell"
+import { PokemonSprite } from "./pokemon-sprite"
+import { AddColumnDialog } from "./add-column-dialog"
+import { ColumnManager } from "./column-manager"
+import { ExportDialog } from "./export-dialog"
+import { AIChatOverlay } from "./ai-chat-overlay"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import type { Pokemon } from "@/lib/types"
+
+export function PokemonDataTable() {
+  const { pokemon, updatePokemon, customColumns } = usePokemonStore()
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [globalFilter, setGlobalFilter] = useState("")
+  const [isChatOpen, setIsChatOpen] = useState(false)
+
+  const parentRef = useRef<HTMLDivElement>(null)
+
+  // Define table columns
+  const columns = useMemo<ColumnDef<Pokemon>[]>(() => {
+    const baseColumns: ColumnDef<Pokemon>[] = [
+      {
+        accessorKey: "id",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="h-8 px-2 text-xs font-medium"
+          >
+            ID
+            {column.getIsSorted() === "asc" ? (
+              <ArrowUp className="ml-1 h-3 w-3" />
+            ) : column.getIsSorted() === "desc" ? (
+              <ArrowDown className="ml-1 h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="ml-1 h-3 w-3" />
+            )}
+          </Button>
+        ),
+        cell: ({ row, getValue }) => (
+          <EditableCell
+            value={getValue()}
+            onSave={(value) => updatePokemon(row.original.id, { id: value })}
+            type="number"
+            className="font-mono text-sm"
+          />
+        ),
+        size: 80,
+      },
+      {
+        accessorKey: "sprite",
+        header: "Sprite",
+        cell: ({ row }) => <PokemonSprite src={row.original.sprite} alt={row.original.name} size={40} />,
+        enableSorting: false,
+        size: 60,
+      },
+      {
+        accessorKey: "name",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="h-8 px-2 text-xs font-medium"
+          >
+            Name
+            {column.getIsSorted() === "asc" ? (
+              <ArrowUp className="ml-1 h-3 w-3" />
+            ) : column.getIsSorted() === "desc" ? (
+              <ArrowDown className="ml-1 h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="ml-1 h-3 w-3" />
+            )}
+          </Button>
+        ),
+        cell: ({ row, getValue }) => (
+          <EditableCell
+            value={getValue()}
+            onSave={(value) => updatePokemon(row.original.id, { name: value })}
+            type="string"
+            className="font-medium"
+          />
+        ),
+        size: 120,
+      },
+      {
+        accessorKey: "types",
+        header: "Types",
+        cell: ({ row, getValue }) => (
+          <EditableCell
+            value={getValue()}
+            onSave={(value) => updatePokemon(row.original.id, { types: value })}
+            type="array"
+          />
+        ),
+        enableSorting: false,
+        size: 140,
+      },
+      {
+        accessorKey: "hp",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="h-8 px-2 text-xs font-medium"
+          >
+            HP
+            {column.getIsSorted() === "asc" ? (
+              <ArrowUp className="ml-1 h-3 w-3" />
+            ) : column.getIsSorted() === "desc" ? (
+              <ArrowDown className="ml-1 h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="ml-1 h-3 w-3" />
+            )}
+          </Button>
+        ),
+        cell: ({ row, getValue }) => (
+          <EditableCell
+            value={getValue()}
+            onSave={(value) => updatePokemon(row.original.id, { hp: value })}
+            type="number"
+            className="font-mono text-center"
+          />
+        ),
+        size: 80,
+      },
+      {
+        accessorKey: "attack",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="h-8 px-2 text-xs font-medium"
+          >
+            Attack
+            {column.getIsSorted() === "asc" ? (
+              <ArrowUp className="ml-1 h-3 w-3" />
+            ) : column.getIsSorted() === "desc" ? (
+              <ArrowDown className="ml-1 h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="ml-1 h-3 w-3" />
+            )}
+          </Button>
+        ),
+        cell: ({ row, getValue }) => (
+          <EditableCell
+            value={getValue()}
+            onSave={(value) => updatePokemon(row.original.id, { attack: value })}
+            type="number"
+            className="font-mono text-center"
+          />
+        ),
+        size: 80,
+      },
+      {
+        accessorKey: "defense",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="h-8 px-2 text-xs font-medium"
+          >
+            Defense
+            {column.getIsSorted() === "asc" ? (
+              <ArrowUp className="ml-1 h-3 w-3" />
+            ) : column.getIsSorted() === "desc" ? (
+              <ArrowDown className="ml-1 h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="ml-1 h-3 w-3" />
+            )}
+          </Button>
+        ),
+        cell: ({ row, getValue }) => (
+          <EditableCell
+            value={getValue()}
+            onSave={(value) => updatePokemon(row.original.id, { defense: value })}
+            type="number"
+            className="font-mono text-center"
+          />
+        ),
+        size: 80,
+      },
+      {
+        accessorKey: "specialAttack",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="h-8 px-2 text-xs font-medium"
+          >
+            Sp. Atk
+            {column.getIsSorted() === "asc" ? (
+              <ArrowUp className="ml-1 h-3 w-3" />
+            ) : column.getIsSorted() === "desc" ? (
+              <ArrowDown className="ml-1 h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="ml-1 h-3 w-3" />
+            )}
+          </Button>
+        ),
+        cell: ({ row, getValue }) => (
+          <EditableCell
+            value={getValue()}
+            onSave={(value) => updatePokemon(row.original.id, { specialAttack: value })}
+            type="number"
+            className="font-mono text-center"
+          />
+        ),
+        size: 80,
+      },
+      {
+        accessorKey: "specialDefense",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="h-8 px-2 text-xs font-medium"
+          >
+            Sp. Def
+            {column.getIsSorted() === "asc" ? (
+              <ArrowUp className="ml-1 h-3 w-3" />
+            ) : column.getIsSorted() === "desc" ? (
+              <ArrowDown className="ml-1 h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="ml-1 h-3 w-3" />
+            )}
+          </Button>
+        ),
+        cell: ({ row, getValue }) => (
+          <EditableCell
+            value={getValue()}
+            onSave={(value) => updatePokemon(row.original.id, { specialDefense: value })}
+            type="number"
+            className="font-mono text-center"
+          />
+        ),
+        size: 80,
+      },
+      {
+        accessorKey: "speed",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="h-8 px-2 text-xs font-medium"
+          >
+            Speed
+            {column.getIsSorted() === "asc" ? (
+              <ArrowUp className="ml-1 h-3 w-3" />
+            ) : column.getIsSorted() === "desc" ? (
+              <ArrowDown className="ml-1 h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="ml-1 h-3 w-3" />
+            )}
+          </Button>
+        ),
+        cell: ({ row, getValue }) => (
+          <EditableCell
+            value={getValue()}
+            onSave={(value) => updatePokemon(row.original.id, { speed: value })}
+            type="number"
+            className="font-mono text-center"
+          />
+        ),
+        size: 80,
+      },
+    ]
+
+    // Add custom columns
+    const dynamicColumns: ColumnDef<Pokemon>[] = customColumns.map((customCol) => ({
+      accessorKey: customCol.id,
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="h-8 px-2 text-xs font-medium"
+        >
+          {customCol.name}
+          {column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-1 h-3 w-3" />
+          ) : column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-1 h-3 w-3" />
+          ) : (
+            <ArrowUpDown className="ml-1 h-3 w-3" />
+          )}
+        </Button>
+      ),
+      cell: ({ row, getValue }) => (
+        <EditableCell
+          value={getValue()}
+          onSave={(value) => updatePokemon(row.original.id, { [customCol.id]: value })}
+          type={customCol.type === "text" ? "string" : customCol.type === "number" ? "number" : "string"}
+        />
+      ),
+      size: 120,
+    }))
+
+    const addColumnColumn: ColumnDef<Pokemon> = {
+      id: "add-column",
+      header: () => <AddColumnDialog />,
+      cell: () => <div className="w-full h-8" />,
+      enableSorting: false,
+      size: 100,
+    }
+
+    return [...baseColumns, ...dynamicColumns, addColumnColumn]
+  }, [customColumns, updatePokemon])
+
+  const table = useReactTable({
+    data: pokemon,
+    columns,
+    state: {
+      sorting,
+      columnFilters,
+      globalFilter,
+    },
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+  })
+
+  const { rows } = table.getRowModel()
+
+  const rowVirtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 60,
+    overscan: 10,
+  })
+
+  if (pokemon.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64 text-muted-foreground">
+        <p>No Pokemon data loaded. Please fetch data from the Data Sources tab.</p>
+      </div>
+    )
+  }
+
+  // Get filtered Pokemon data for export
+  const filteredPokemon = rows.map((row) => row.original)
+
+  return (
+    <div className="space-y-4 relative">
+      {/* Search and Controls */}
+      <div className="flex items-center gap-4 px-6 py-4">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search Pokemon..."
+            value={globalFilter}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <div className="text-sm text-muted-foreground">
+          Showing {rows.length.toLocaleString()} of {pokemon.length.toLocaleString()} Pokemon
+        </div>
+        <ExportDialog filteredPokemon={filteredPokemon} />
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Settings className="h-4 w-4 mr-2" />
+              Manage Columns
+            </Button>
+          </SheetTrigger>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Column Management</SheetTitle>
+              <SheetDescription>Add, remove, and manage custom columns for your Pokemon dataset.</SheetDescription>
+            </SheetHeader>
+            <div className="mt-6">
+              <ColumnManager />
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {/* Virtualized Table */}
+      <div
+        ref={parentRef}
+        className="h-[600px] overflow-auto border rounded-lg"
+        style={{
+          contain: "strict",
+        }}
+      >
+        <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: "100%", position: "relative" }}>
+          {/* Table Header */}
+          <div className="sticky top-0 z-10 bg-background border-b">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <div key={headerGroup.id} className="flex">
+                {headerGroup.headers.map((header, index) => {
+                  const isFirstColumn = index === 0
+                  const isLastColumn = index === headerGroup.headers.length - 1
+                  return (
+                    <div
+                      key={header.id}
+                      className={`border-r last:border-r-0 bg-muted/50 ${
+                        isFirstColumn || isLastColumn ? "sticky z-20 bg-background" : ""
+                      } ${isFirstColumn ? "left-0" : ""} ${isLastColumn ? "right-0" : ""}`}
+                      style={{ width: header.getSize() }}
+                    >
+                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                    </div>
+                  )
+                })}
+              </div>
+            ))}
+          </div>
+
+          {/* Virtual Rows */}
+          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+            const row = rows[virtualRow.index]
+            return (
+              <div
+                key={row.id}
+                className="absolute flex w-full hover:bg-muted/30"
+                style={{
+                  height: `${virtualRow.size}px`,
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
+              >
+                {row.getVisibleCells().map((cell, index) => {
+                  const isFirstColumn = index === 0
+                  const isLastColumn = index === row.getVisibleCells().length - 1
+                  return (
+                    <div
+                      key={cell.id}
+                      className={`border-r last:border-r-0 border-b flex items-center px-2 ${
+                        isFirstColumn || isLastColumn ? "sticky z-10 bg-background" : ""
+                      } ${isFirstColumn ? "left-0" : ""} ${isLastColumn ? "right-0" : ""}`}
+                      style={{ width: cell.column.getSize() }}
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Table Info */}
+      <div className="px-6 py-2 text-sm text-muted-foreground border-t">
+        <div className="flex justify-between items-center">
+          <span>
+            {pokemon.length.toLocaleString()} total Pokemon • {customColumns.length} custom columns
+          </span>
+          <span>Scroll to see more data • Click cells to edit</span>
+        </div>
+      </div>
+
+      {/* AI Chat Overlay */}
+      <AIChatOverlay isOpen={isChatOpen} onToggle={() => setIsChatOpen(!isChatOpen)} />
+    </div>
+  )
+}
