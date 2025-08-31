@@ -286,6 +286,7 @@ export function PokemonDataTable() {
 
     // Add custom columns
     const dynamicColumns: ColumnDef<Pokemon>[] = customColumns.map((customCol) => ({
+      id: customCol.id,
       accessorKey: customCol.id,
       header: ({ column }) => (
         <Button
@@ -303,13 +304,22 @@ export function PokemonDataTable() {
           )}
         </Button>
       ),
-      cell: ({ row, getValue }) => (
-        <EditableCell
-          value={getValue()}
-          onSave={(value) => updatePokemon(row.original.id, { [customCol.id]: value })}
-          type={customCol.type === "text" ? "string" : customCol.type === "number" ? "number" : "string"}
-        />
-      ),
+      cell: ({ row, getValue }) => {
+        const cellValue = row.original[customCol.id] ?? customCol.defaultValue
+        console.log(`Rendering ${customCol.name} for Pokemon ${row.original.id}:`, { 
+          columnId: customCol.id, 
+          cellValue, 
+          defaultValue: customCol.defaultValue,
+          hasValue: customCol.id in row.original
+        })
+        return (
+          <EditableCell
+            value={cellValue}
+            onSave={(value) => updatePokemon(row.original.id, { [customCol.id]: value })}
+            type={customCol.type === "text" ? "string" : customCol.type === "number" ? "number" : "string"}
+          />
+        )
+      },
       size: 120,
     }))
 
