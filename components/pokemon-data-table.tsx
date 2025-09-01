@@ -46,7 +46,7 @@ export function PokemonDataTable() {
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className="h-8 px-2 text-xs font-medium"
           >
-            ID
+            Id
             {column.getIsSorted() === "asc" ? (
               <ArrowUp className="ml-1 h-3 w-3" />
             ) : column.getIsSorted() === "desc" ? (
@@ -96,7 +96,7 @@ export function PokemonDataTable() {
             value={getValue()}
             onSave={(value) => updatePokemon(row.original.id, { name: value })}
             type="string"
-            className="font-medium"
+            className="font-medium overflow-x-auto whitespace-nowrap [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-button]:hidden"
           />
         ),
         size: 120,
@@ -285,8 +285,9 @@ export function PokemonDataTable() {
     ]
 
     // Add custom columns
-    const dynamicColumns: ColumnDef<Pokemon>[] = customColumns.map((customCol) => ({
-      accessorKey: customCol.id,
+         const dynamicColumns: ColumnDef<Pokemon>[] = customColumns.map((customCol) => ({
+       id: customCol.id,
+       accessorKey: customCol.id,
       header: ({ column }) => (
         <Button
           variant="ghost"
@@ -303,13 +304,16 @@ export function PokemonDataTable() {
           )}
         </Button>
       ),
-      cell: ({ row, getValue }) => (
-        <EditableCell
-          value={getValue()}
-          onSave={(value) => updatePokemon(row.original.id, { [customCol.id]: value })}
-          type={customCol.type === "text" ? "string" : customCol.type === "number" ? "number" : "string"}
-        />
-      ),
+             cell: ({ row, getValue }) => {
+         const cellValue = row.original[customCol.id] ?? customCol.defaultValue
+         return (
+           <EditableCell
+             value={cellValue}
+             onSave={(value) => updatePokemon(row.original.id, { [customCol.id]: value })}
+             type={customCol.type === "text" ? "string" : customCol.type === "number" ? "number" : customCol.type === "boolean" ? "boolean" : "string"}
+           />
+         )
+       },
       size: 120,
     }))
 
