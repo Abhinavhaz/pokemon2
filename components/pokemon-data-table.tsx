@@ -138,6 +138,7 @@ export function PokemonDataTable() {
             onSave={(value) => updatePokemon(row.original.id, { hp: value })}
             type="number"
             className="font-mono text-center"
+            readonly={false}
           />
         ),
         size: 80,
@@ -166,6 +167,7 @@ export function PokemonDataTable() {
             onSave={(value) => updatePokemon(row.original.id, { attack: value })}
             type="number"
             className="font-mono text-center"
+            readonly={false}
           />
         ),
         size: 80,
@@ -194,6 +196,7 @@ export function PokemonDataTable() {
             onSave={(value) => updatePokemon(row.original.id, { defense: value })}
             type="number"
             className="font-mono text-center"
+            readonly={false}
           />
         ),
         size: 80,
@@ -222,6 +225,7 @@ export function PokemonDataTable() {
             onSave={(value) => updatePokemon(row.original.id, { specialAttack: value })}
             type="number"
             className="font-mono text-center"
+            readonly={false}
           />
         ),
         size: 80,
@@ -250,6 +254,7 @@ export function PokemonDataTable() {
             onSave={(value) => updatePokemon(row.original.id, { specialDefense: value })}
             type="number"
             className="font-mono text-center"
+            readonly={false}
           />
         ),
         size: 80,
@@ -278,6 +283,7 @@ export function PokemonDataTable() {
             onSave={(value) => updatePokemon(row.original.id, { speed: value })}
             type="number"
             className="font-mono text-center"
+            readonly={false}
           />
         ),
         size: 80,

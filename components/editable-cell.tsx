@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Check, X } from "lucide-react"
@@ -12,21 +12,31 @@ interface EditableCellProps {
   onSave: (value: any) => void
   type?: "string" | "number" | "array"
   className?: string
+  readonly?: boolean
 }
 
-export function EditableCell({ value, onSave, type = "string", className = "" }: EditableCellProps) {
+export function EditableCell({ value, onSave, type = "string", className = "", readonly = false }: EditableCellProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(value)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setEditValue(value)
   }, [value])
 
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus()
+      inputRef.current.select()
+    }
+  }, [isEditing])
+
   const handleSave = () => {
     let processedValue = editValue
 
     if (type === "number") {
-      processedValue = Number.parseFloat(editValue) || 0
+      const numValue = Number.parseFloat(String(editValue))
+      processedValue = isNaN(numValue) ? 0 : numValue
     } else if (type === "array") {
       if (typeof editValue === "string") {
         processedValue = editValue
@@ -38,6 +48,15 @@ export function EditableCell({ value, onSave, type = "string", className = "" }:
 
     onSave(processedValue)
     setIsEditing(false)
+  }
+
+  const handleBlur = (e: React.FocusEvent) => {
+    // Don't save if clicking on save/cancel buttons
+    const relatedTarget = e.relatedTarget as HTMLElement
+    if (relatedTarget && relatedTarget.closest('button')) {
+      return
+    }
+    handleSave()
   }
 
   const handleCancel = () => {
@@ -54,19 +73,36 @@ export function EditableCell({ value, onSave, type = "string", className = "" }:
   }
 
   if (isEditing) {
+    const inputValue = type === "array" && Array.isArray(editValue)
+      ? editValue.join(", ")
+      : String(editValue ?? "")
+
     return (
-      <div className="flex items-center gap-1">
-        <Input
-          value={type === "array" && Array.isArray(editValue) ? editValue.join(", ") : editValue}
+      <div className="flex items-center gap-1 w-full max-w-full">
+        <input
+          ref={inputRef}
+          value={inputValue}
           onChange={(e) => setEditValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="h-8 text-xs"
-          autoFocus
+          onBlur={handleBlur}
+          className="flex-1 min-w-0 h-6 text-xs px-1 border border-input bg-background rounded focus:outline-none focus:ring-1 focus:ring-ring"
+          type="text"
+          autoComplete="off"
         />
-        <button onClick={handleSave} className="p-1 hover:bg-green-100 rounded text-green-600" title="Save">
+        <button
+          onClick={handleSave}
+          onMouseDown={(e) => e.preventDefault()}
+          className="flex-shrink-0 p-0.5 hover:bg-green-100 rounded text-green-600"
+          title="Save"
+        >
           <Check className="h-3 w-3" />
         </button>
-        <button onClick={handleCancel} className="p-1 hover:bg-red-100 rounded text-red-600" title="Cancel">
+        <button
+          onClick={handleCancel}
+          onMouseDown={(e) => e.preventDefault()}
+          className="flex-shrink-0 p-0.5 hover:bg-red-100 rounded text-red-600"
+          title="Cancel"
+        >
           <X className="h-3 w-3" />
         </button>
       </div>
@@ -88,11 +124,17 @@ export function EditableCell({ value, onSave, type = "string", className = "" }:
     return value?.toString() || ""
   }
 
+  const handleClick = () => {
+    if (!readonly) {
+      setIsEditing(true)
+    }
+  }
+
   return (
     <div
-      className={`cursor-pointer hover:bg-muted/50 p-1 rounded min-h-[2rem] flex items-center ${className}`}
-      onClick={() => setIsEditing(true)}
-      title="Click to edit"
+      className={`${readonly ? 'cursor-default' : 'cursor-pointer hover:bg-muted/50'} p-1 rounded min-h-[2rem] flex items-center w-full max-w-full overflow-hidden ${className}`}
+      onClick={handleClick}
+      title={readonly ? "Read-only field" : "Click to edit"}
     >
       {displayValue()}
     </div>
