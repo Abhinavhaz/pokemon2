@@ -109,6 +109,7 @@ export function PokemonDataTable() {
             value={getValue()}
             onSave={(value) => updatePokemon(row.original.id, { types: value })}
             type="array"
+            className="font-medium overflow-x-auto whitespace-nowrap [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-button]:hidden"
           />
         ),
         enableSorting: false,
@@ -141,7 +142,7 @@ export function PokemonDataTable() {
             readonly={false}
           />
         ),
-        size: 80,
+        size: 120,
       },
       {
         accessorKey: "attack",
@@ -170,7 +171,7 @@ export function PokemonDataTable() {
             readonly={false}
           />
         ),
-        size: 80,
+        size: 120,
       },
       {
         accessorKey: "defense",
@@ -199,7 +200,7 @@ export function PokemonDataTable() {
             readonly={false}
           />
         ),
-        size: 80,
+        size: 120,
       },
       {
         accessorKey: "specialAttack",
@@ -228,7 +229,7 @@ export function PokemonDataTable() {
             readonly={false}
           />
         ),
-        size: 80,
+        size: 120,
       },
       {
         accessorKey: "specialDefense",
@@ -257,7 +258,7 @@ export function PokemonDataTable() {
             readonly={false}
           />
         ),
-        size: 80,
+        size: 120,
       },
       {
         accessorKey: "speed",
@@ -286,7 +287,7 @@ export function PokemonDataTable() {
             readonly={false}
           />
         ),
-        size: 80,
+        size: 120,
       },
     ]
 
@@ -368,6 +369,11 @@ export function PokemonDataTable() {
 
   const { rows } = table.getRowModel()
 
+  // Calculate total table width based on all columns
+  const totalTableWidth = useMemo(() => {
+    return table.getAllColumns().reduce((total, column) => total + column.getSize(), 0)
+  }, [table.getAllColumns()])
+
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => parentRef.current,
@@ -401,6 +407,11 @@ export function PokemonDataTable() {
         </div>
         <div className="text-xs sm:text-sm text-muted-foreground">
           Showing {rows.length.toLocaleString()} of {pokemon.length.toLocaleString()} Pokemon
+          {totalTableWidth > 720 && (
+            <div className="text-xs text-blue-600 mt-1">
+              ← Scroll horizontally to see all columns →
+            </div>
+          )}
         </div>
         <div className="flex gap-2">
           <ExportDialog filteredPokemon={filteredPokemon} />
@@ -432,11 +443,16 @@ export function PokemonDataTable() {
           contain: "strict",
         }}
       >
-        <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, minWidth: "720px", width: "100%", position: "relative" }}>
+        <div style={{
+          height: `${rowVirtualizer.getTotalSize()}px`,
+          width: Math.max(totalTableWidth, 720),
+          minWidth: Math.max(totalTableWidth, 720),
+          position: "relative"
+        }}>
           {/* Table Header */}
           <div className="sticky top-0 z-10 bg-background border-b">
             {table.getHeaderGroups().map((headerGroup) => (
-              <div key={headerGroup.id} className="flex">
+              <div key={headerGroup.id} className="flex" style={{ minWidth: Math.max(totalTableWidth, 720) }}>
                 {headerGroup.headers.map((header, index) => {
                   const isFirstColumn = index === 0
                   const isLastColumn = index === headerGroup.headers.length - 1
@@ -462,10 +478,12 @@ export function PokemonDataTable() {
             return (
               <div
                 key={row.id}
-                className="absolute flex w-full hover:bg-muted/30"
+                className="absolute flex hover:bg-muted/30"
                 style={{
                   height: `${virtualRow.size}px`,
                   transform: `translateY(${virtualRow.start}px)`,
+                  width: Math.max(totalTableWidth, 720),
+                  minWidth: Math.max(totalTableWidth, 720),
                 }}
               >
                 {row.getVisibleCells().map((cell, index) => {
